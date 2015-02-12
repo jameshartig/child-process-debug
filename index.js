@@ -1,4 +1,5 @@
-var child_process = require('child_process');
+var child_process = require('child_process'),
+    EventEmitter = require('events').EventEmitter;
 
 function setChildInfo(port, info) {
     if (global.debugChildProcesses === undefined) {
@@ -14,11 +15,11 @@ function getChildInfo(port) {
     return global.debugChildProcesses[port];
 }
 
-function _getDebugPort() {
+function _getDebugPort(argv) {
     var port, i;
-    for (i = process.execArgv.length - 1; i >= 0; i--) {
-        if (process.execArgv[i].indexOf('--debug') !== -1) {
-            port = parseInt(process.execArgv[i].substr(8), 10);
+    for (i = argv.length - 1; i >= 0; i--) {
+        if (typeof argv[i] === 'string' && argv[i].indexOf('--debug') !== -1) {
+            port = parseInt(argv[i].substr(8), 10);
             if (!port) {
                 port = 5858;
             }
@@ -30,7 +31,7 @@ function _getDebugPort() {
 
 function incrementDebugPort(info) {
     //start at end so we pick up the LAST debug statement
-    var portAndIndex = _getDebugPort(),
+    var portAndIndex = _getDebugPort(process.execArgv),
         nextPort;
     if (portAndIndex[0]) {
         nextPort = portAndIndex[0] + 1;
@@ -42,21 +43,11 @@ function incrementDebugPort(info) {
     return nextPort;
 }
 
-//if there's already a debug port then don't overwrite it
-function addDebugPortToArgs(args, port) {
-    for (var i = 0, l = args.length; i < l; i++) {
-        if (typeof args[i] === 'string' && args[i].indexOf('--debug') !== -1) {
-            return;
-        }
-    }
-    args.unshift('--debug=' + port);
-}
-
 //shove the --debug at the front of arguments
 function wrapSpawn(/*file , args, options*/) {
     var argsIndex = 1,
         file = arguments[0],
-        args, options, debugPort;
+        args, options, debugPort, child;
     if (typeof file !== 'string') {
         file = process.execPath;
         argsIndex = 0;
@@ -71,14 +62,21 @@ function wrapSpawn(/*file , args, options*/) {
     }
     debugPort = incrementDebugPort({args: args});
     if (debugPort) {
-        addDebugPortToArgs(args, debugPort);
+        //if there's already a debug port then don't overwrite it
+        if (!_getDebugPort(args)[0]) {
+            args.unshift('--debug=' + debugPort);
+        }
     }
     //in case they add more params in the future, concat new args on
-    return child_process.spawn.apply(child_process, [file, args, options].concat(Array.prototype.slice.call(arguments, 3)));
+    child = child_process.spawn.apply(child_process, [file, args, options].concat(Array.prototype.slice.call(arguments, 3)));
+    if (child instanceof EventEmitter) {
+        child.debugPort = debugPort || _getDebugPort(args)[0];
+    }
+    return child;
 }
 
 exports.port = function() {
-    return _getDebugPort()[0];
+    return _getDebugPort(process.execArgv)[0];
 };
 exports.spawn = wrapSpawn;
 exports.nextPort = incrementDebugPort;

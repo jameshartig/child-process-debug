@@ -22,6 +22,9 @@ This takes the exact same arguments as `child_process.spawn` and if the parent h
 it'll turn on debugging for the spawned child. `command` is also optional (unlike `child_process.spawn`) and defaults
 to `process.execPath`.
 
+The ChildProcess returned from spawn will have a property called `debugPort` indicating the debug port chosen for that
+child or `undefined`.
+
 ### nextPort() ###
 Returns the next debug port that comes after the current process's debug port. If the current process doesn't have
 debug turned on then this will return `undefined`. This is useful if you're not using `spawn` and want to specify the

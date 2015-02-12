@@ -1,4 +1,5 @@
 var child_process = require('child_process'),
+    EventEmitter = require('events').EventEmitter,
     reload = require('require-reload')(require),
     childProcessDebug = reload('../index.js');
 
@@ -35,133 +36,172 @@ function hackSpawn(spawn) {
 exports.testSpawnArgsCommon = function(test) {
     var file = 'test.js',
         args = [0, 1],
-        options = {};
+        options = {},
+        child;
 
     toggleDebugFlag(false);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
         test.equal(arguments[1].length, 2);
         test.strictEqual(arguments[2], options);
+        return new EventEmitter();
     }).spawn(file, args, options);
+    test.strictEqual(child.debugPort, undefined);
 
     toggleDebugFlag(true);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
         test.equal(arguments[1][0], '--debug=5859');
         test.equal(arguments[1].length, 3);
         test.strictEqual(arguments[2], options);
+        return new EventEmitter();
     }).spawn(file, args, options);
+    test.equal(child.debugPort, 5859);
     test.done();
 };
 
 exports.testSpawnArgsNoFile = function(test) {
     var file = process.execPath,
         args = [0, 1],
-        options = {};
+        options = {},
+        child;
 
     toggleDebugFlag(false);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
         test.equal(arguments[1].length, 2);
         test.strictEqual(arguments[2], options);
+        return new EventEmitter();
     }).spawn(args, options);
+    test.strictEqual(child.debugPort, undefined);
 
     toggleDebugFlag(true);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
         test.equal(arguments[1][0], '--debug=5859');
         test.equal(arguments[1].length, 3);
         test.strictEqual(arguments[2], options);
+        return new EventEmitter();
     }).spawn(args, options);
+    test.equal(child.debugPort, 5859);
     test.done();
 };
 
 exports.testSpawnArgsOnlyOptions = function(test) {
     var file = process.execPath,
-        options = {};
+        options = {},
+        child;
 
     toggleDebugFlag(false);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
         test.equal(arguments[1].length, 0);
         test.strictEqual(arguments[2], options);
+        return new EventEmitter();
     }).spawn(options);
+    test.strictEqual(child.debugPort, undefined);
 
     toggleDebugFlag(true);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
         test.equal(arguments[1][0], '--debug=5859');
         test.equal(arguments[1].length, 1);
         test.strictEqual(arguments[2], options);
+        return new EventEmitter();
     }).spawn(options);
+    test.equal(child.debugPort, 5859);
     test.done();
 };
 
 exports.testSpawnArgsOnlyFile = function(test) {
-    var file = 'test.js';
+    var file = 'test.js',
+        child;
 
     toggleDebugFlag(false);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
         test.equal(arguments[1].length, 0);
+        return new EventEmitter();
     }).spawn(file);
+    test.strictEqual(child.debugPort, undefined);
 
     toggleDebugFlag(true);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
         test.equal(arguments[1][0], '--debug=5859');
         test.equal(arguments[1].length, 1);
+        return new EventEmitter();
     }).spawn(file);
+    test.equal(child.debugPort, 5859);
     test.done();
 };
 
 exports.testSpawnArgsOnlyArgs = function(test) {
     var file = process.execPath,
-        args = [0, 1];
+        args = [0, 1],
+        child;
 
     toggleDebugFlag(false);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
         test.equal(arguments[1].length, 2);
+        return new EventEmitter();
     }).spawn(args);
+    test.strictEqual(child.debugPort, undefined);
 
     toggleDebugFlag(true);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
         test.equal(arguments[1][0], '--debug=5859');
         test.equal(arguments[1].length, 3);
+        return new EventEmitter();
     }).spawn(args);
+    test.equal(child.debugPort, 5859);
     test.done();
 };
 
 exports.testSpawnIgnoreDebug = function(test) {
     var file = process.execPath,
-        args = [0, '--debug=9999'];
+        args = [0, '--debug=9999'],
+        child;
 
     toggleDebugFlag(false);
-    hackSpawn(function() {
+    child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
-        test.ok(Array.isArray(arguments[1]));
+        test.strictEqual(arguments[1], args);
         test.equal(arguments[1].length, 2);
+        return new EventEmitter();
     }).spawn(args);
+    test.strictEqual(child.debugPort, 9999);
 
     toggleDebugFlag(true);
     hackSpawn(function() {
         test.strictEqual(arguments[0], file);
-        test.ok(Array.isArray(arguments[1]));
+        test.strictEqual(arguments[1], args);
         test.equal(arguments[1][1], '--debug=9999');
         test.equal(arguments[1].length, 2);
+        return new EventEmitter();
     }).spawn(args);
+    test.equal(child.debugPort, 9999);
+    test.done();
+};
+
+exports.testSpawnFailure = function(test) {
+    toggleDebugFlag(false);
+    var child = hackSpawn(function() {
+        return null;
+    }).spawn();
+    test.strictEqual(child, null);
     test.done();
 };
 
@@ -192,11 +232,13 @@ exports.testPort = function(test) {
 };
 
 exports.testSpawnDebuggingEnabled = function(test) {
-    test.expect(1);
+    test.expect(2);
     toggleDebugFlag(false);
     toggleDebugFlag(true, 15000);
     var child = childProcessDebug.spawn(['./tests/lib/spawn.js']),
         receivedDebugging = false;
+    test.strictEqual(child.debugPort, 15001);
+
     child.stderr.setEncoding('utf8');
     child.stderr.on('data', function(data) {
         if (data && data.toLowerCase().indexOf('debugger listening on port 15001') !== -1) {
