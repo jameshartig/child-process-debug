@@ -1,6 +1,6 @@
 {
   "name": "child-process-debug",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Convenience methods for debugging child-process",
   "directories": {
     "test": "tests"
