@@ -1,0 +1,31 @@
+{
+  "name": "child-process-debug",
+  "version": "0.0.1",
+  "description": "Convenience methods for debugging child-process",
+  "directories": {
+    "test": "tests"
+  },
+  "devDependencies": {
+    "nodeunit": "0.9.0",
+    "require-reload": "0.2.2"
+  },
+  "scripts": {
+    "test": "nodeunit tests"
+  },
+  "engines": {"node": ">=0.10.36"},
+  "engineStrict": true,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fastest963/child-process-debug.git"
+  },
+  "keywords": [
+    "child_process",
+    "child",
+    "process",
+    "debug",
+    "debugger"
+  ],
+  "author": "James Hartig <fastest963@gmail.com>",
+  "license": "MIT",
+  "readmeFilename": "README.md"
+}
