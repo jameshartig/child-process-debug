@@ -5,7 +5,7 @@ var child_process = require('child_process'),
 
 //this is for the testMyPortImmutable test
 process.execArgv.push('--debug=1234');
-childProcessDebug = reload('../index.js');
+childProcessDebug = reload('../debug.js');
 
 function toggleDebugFlag(enabled, port, enabledBrk) {
     for (var i = process.execArgv.length - 1; i >= 0; i--) {
@@ -33,7 +33,7 @@ function toggleDebugFlag(enabled, port, enabledBrk) {
         global.v8DebugBreak = false;
     }
     //need to reload this EVERYTIME so it picks up our changes to execArgv as if we just started the process
-    childProcessDebug = reload('../index.js');
+    childProcessDebug = reload('../debug.js');
 }
 
 function hackSpawn(spawn) {
@@ -44,7 +44,7 @@ function hackSpawn(spawn) {
             spawn: spawn
         }
     };
-    return reload('../index.js');
+    return reload('../debug.js');
 }
 
 exports.testSpawnArgsCommon = function(test) {
