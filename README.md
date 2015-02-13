@@ -2,7 +2,7 @@
 
 Convenience methods for debugging child processes in Node.JS. Child processes will be started with `--debug` if the
 parent was started with `--debug` and the children will each get their own increasing port number based off the 
-parent's port number. The default port is 5858. 
+parent's port number. The default port is 5858. If you add `--debug-brk` that will also get passed to the children.
 
 ## Example ##
 ```JS
@@ -32,3 +32,6 @@ debug turned on then this will return undefined. This is useful if you're not us
 
 ### port() ###
 Returns the current process's debug port or undefined if debug is not turned on.
+
+### debugBreak() ###
+Returns true if the current process has the flag `--debug-brk`.

@@ -1,9 +1,13 @@
 var child_process = require('child_process'),
     EventEmitter = require('events').EventEmitter,
     reload = require('require-reload')(require),
-    childProcessDebug = reload('../index.js');
+    childProcessDebug;
 
-function toggleDebugFlag(enabled, port) {
+//this is for the testMyPortImmutable test
+process.execArgv.push('--debug=1234');
+childProcessDebug = reload('../index.js');
+
+function toggleDebugFlag(enabled, port, enabledBrk) {
     for (var i = process.execArgv.length - 1; i >= 0; i--) {
         if (process.execArgv[i].indexOf('--debug') !== -1) {
             if (enabled) {
@@ -19,7 +23,17 @@ function toggleDebugFlag(enabled, port) {
         } else {
             process.execArgv.push('--debug');
         }
+        if (enabledBrk) {
+            global.v8DebugBreak = true;
+            process.execArgv.push('--debug-brk');
+        } else {
+            global.v8DebugBreak = false;
+        }
+    } else {
+        global.v8DebugBreak = false;
     }
+    //need to reload this EVERYTIME so it picks up our changes to execArgv as if we just started the process
+    childProcessDebug = reload('../index.js');
 }
 
 function hackSpawn(spawn) {
@@ -55,6 +69,19 @@ exports.testSpawnArgsCommon = function(test) {
         test.strictEqual(arguments[1], args);
         test.equal(arguments[1][0], '--debug=5859');
         test.equal(arguments[1].length, 3);
+        test.strictEqual(arguments[2], options);
+        return new EventEmitter();
+    }).spawn(file, args, options);
+    test.equal(child.debugPort, 5859);
+
+    toggleDebugFlag(false);
+    toggleDebugFlag(true, undefined, true);
+    child = hackSpawn(function() {
+        test.strictEqual(arguments[0], file);
+        test.strictEqual(arguments[1], args);
+        test.equal(arguments[1][0], '--debug=5859');
+        test.equal(arguments[1][1], '--debug-brk');
+        test.equal(arguments[1].length, 4);
         test.strictEqual(arguments[2], options);
         return new EventEmitter();
     }).spawn(file, args, options);
@@ -193,6 +220,18 @@ exports.testSpawnIgnoreDebug = function(test) {
         return new EventEmitter();
     }).spawn(args);
     test.equal(child.debugPort, 9999);
+
+    toggleDebugFlag(false);
+    toggleDebugFlag(true, undefined, true);
+    hackSpawn(function() {
+        test.strictEqual(arguments[0], file);
+        test.strictEqual(arguments[1], args);
+        test.equal(arguments[1][1], '--debug=9999');
+        test.equal(arguments[1][2], '--debug-brk');
+        test.equal(arguments[1].length, 3);
+        return new EventEmitter();
+    }).spawn(args);
+    test.equal(child.debugPort, 9999);
     test.done();
 };
 
@@ -220,19 +259,45 @@ exports.testNextPort = function(test) {
 
 exports.testPort = function(test) {
     toggleDebugFlag(false);
-    test.strictEqual(childProcessDebug.port(), undefined);
+    test.strictEqual(childProcessDebug.port(process.execArgv), undefined);
 
     toggleDebugFlag(true);
-    test.strictEqual(childProcessDebug.port(), 5858);
+    test.strictEqual(childProcessDebug.port(process.execArgv), 5858);
+    test.equal(childProcessDebug.debugBreak(process.execArgv), false);
 
     toggleDebugFlag(false);
     toggleDebugFlag(true, 9999);
-    test.strictEqual(childProcessDebug.port(), 9999);
+    test.strictEqual(childProcessDebug.port(process.execArgv), 9999);
+    test.equal(childProcessDebug.debugBreak(process.execArgv), false);
     test.done();
 };
 
-exports.testSpawnDebuggingEnabled = function(test) {
+exports.testDebugBreak = function(test) {
+    toggleDebugFlag(false);
+    toggleDebugFlag(true, undefined, true);
+    test.equal(childProcessDebug.port(process.execArgv), 5858);
+    test.equal(childProcessDebug.debugBreak(process.execArgv), true);
+
+    toggleDebugFlag(false);
+    toggleDebugFlag(true, 9999, true);
+    test.equal(childProcessDebug.port(process.execArgv), 9999);
+    test.equal(childProcessDebug.debugBreak(process.execArgv), true);
+    test.done();
+};
+
+exports.testMyPortImmutable = function(test) {
+    toggleDebugFlag(false);
+    process.execArgv.push('--debug=9999');
+    process.execArgv.push('--debug-brk');
+    //this *shouldn't* change the actual port that childProcessDebug reports, like ever
+    test.equal(childProcessDebug.port(), 1234);
+    test.equal(childProcessDebug.debugBreak(), false);
+    test.done();
+};
+
+exports.testActualSpawnDebugging = function(test) {
     test.expect(2);
+    reload.emptyCache(); //clear out any hacked spawns
     toggleDebugFlag(false);
     toggleDebugFlag(true, 15000);
     var child = childProcessDebug.spawn(['./tests/lib/spawn.js']),

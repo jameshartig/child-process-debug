@@ -1,5 +1,7 @@
 var child_process = require('child_process'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter,
+    myDebugBreak = global.v8DebugBreak,
+    myDebugPort = global.v8DebugPort;
 
 function setChildInfo(port, info) {
     if (global.debugChildProcesses === undefined) {
@@ -16,17 +18,39 @@ function getChildInfo(port) {
 }
 
 function _getDebugPort(argv) {
-    var port, i;
+    var debugBreak = false,
+        debugIndex = -1,
+        port, i;
     for (i = argv.length - 1; i >= 0; i--) {
-        if (typeof argv[i] === 'string' && argv[i].indexOf('--debug') !== -1) {
+        if (typeof argv[i] !== 'string') {
+            continue;
+        }
+        if (!debugBreak && argv[i] === '--debug-brk') {
+            debugBreak = true;
+            continue;
+        }
+        if (debugIndex === -1 && argv[i].indexOf('--debug') !== -1) {
             port = parseInt(argv[i].substr(8), 10);
             if (!port) {
                 port = 5858;
             }
-            break;
+            debugIndex = i;
         }
     }
-    return [port, i];
+    //todo: stop using an array for this and use an object...
+    return [port, debugIndex, debugBreak];
+}
+//initially store the values we were run with in case someone changes them later or we increment them
+if (myDebugPort === undefined) {
+    myDebugPort = _getDebugPort(process.execArgv)[0];
+    if (myDebugPort) {
+        //store this globally so we always have a record of the initial debug port for this process
+        global.v8DebugPort = myDebugPort;
+    }
+}
+if (myDebugBreak === undefined) {
+    myDebugBreak = _getDebugPort(process.execArgv)[2];
+    global.v8DebugBreak = myDebugBreak;
 }
 
 function incrementDebugPort(info) {
@@ -47,7 +71,8 @@ function incrementDebugPort(info) {
 function wrapSpawn(/*file , args, options*/) {
     var argsIndex = 1,
         file = arguments[0],
-        args, options, debugPort, child;
+        args, options, debugPort, child,
+        argsPortBrk;
     if (typeof file !== 'string') {
         file = process.execPath;
         argsIndex = 0;
@@ -60,23 +85,37 @@ function wrapSpawn(/*file , args, options*/) {
         args = [];
         options = arguments[0];
     }
+    argsPortBrk = _getDebugPort(args);
     debugPort = incrementDebugPort({args: args});
     if (debugPort) {
-        //if there's already a debug port then don't overwrite it
-        if (!_getDebugPort(args)[0]) {
+        //only add --debug=port when they didn't already add one
+        if (!argsPortBrk[0]) {
             args.unshift('--debug=' + debugPort);
+            argsPortBrk[1] = 0;
+        }
+        if (!argsPortBrk[2] && myDebugBreak) {
+            args.splice(argsPortBrk[1] + 1, 0, '--debug-brk');
         }
     }
     //in case they add more params in the future, concat new args on
     child = child_process.spawn.apply(child_process, [file, args, options].concat(Array.prototype.slice.call(arguments, 3)));
     if (child instanceof EventEmitter) {
-        child.debugPort = debugPort || _getDebugPort(args)[0];
+        child.debugPort = debugPort || argsPortBrk[0];
     }
     return child;
 }
 
-exports.port = function() {
-    return _getDebugPort(process.execArgv)[0];
+exports.port = function(argv) {
+    if (argv === undefined) {
+        return myDebugPort;
+    }
+    return _getDebugPort(argv)[0];
+};
+exports.debugBreak = function(argv) {
+    if (argv === undefined) {
+        return myDebugBreak;
+    }
+    return _getDebugPort(argv)[2];
 };
 exports.spawn = wrapSpawn;
 exports.nextPort = incrementDebugPort;
