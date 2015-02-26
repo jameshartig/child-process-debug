@@ -39,3 +39,5 @@ Returns the current process's debug port or undefined if debug is not turned on.
 
 ### debugBreak() ###
 Returns true if the current process has the flag `--debug-brk`.
+
+By [James Hartig](https://github.com/fastest963/)
