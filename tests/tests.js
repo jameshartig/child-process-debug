@@ -341,3 +341,32 @@ exports.testActualSpawnDebugging = function(test) {
     //now we can trigger the child to die
     child.stdin.write("hey\n");
 };
+
+exports.testActualForkDebugging = function(test) {
+    test.expect(2);
+    reload.emptyCache(); //clear out any hacked spawns
+    toggleDebugFlag(false);
+    toggleDebugFlag(true, 15000);
+    //without silent: true, the output will go out our stderr
+    var child = childProcessDebug.fork('./tests/lib/spawn.js', {silent: true}),
+        receivedDebugging = false;
+    test.strictEqual(child.debugPort, 15001);
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', function(data) {
+        if (data && data.toLowerCase().indexOf('debugger listening on port 15001') !== -1) {
+            receivedDebugging = true;
+        } else {
+            console.log("spawn.js stderr: " + data);
+        }
+    });
+    child.on('exit', function(code) {
+        if (code !== 0) {
+            console.log("spawn.js exited with code " + code);
+        }
+        test.ok(receivedDebugging);
+        test.done();
+    });
+    //now we can trigger the child to die
+    child.stdin.write("hey\n");
+};

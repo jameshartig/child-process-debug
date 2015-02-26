@@ -25,6 +25,10 @@ to `process.execPath`.
 The ChildProcess returned from spawn will have a property called `debugPort` indicating the debug port chosen for that
 child or undefined.
 
+### fork(modulePath [, args][, options]) ###
+This takes the exact same arguments as `child_process.fork` and if the parent had debugging turned on (via --debug),
+it'll turn on debugging for the spawned child. Return is the same as `spawn` above.
+
 ### nextPort() ###
 Returns the next debug port that comes after the current process's debug port. If the current process doesn't have
 debug turned on then this will return undefined. This is useful if you're not using `spawn` and want to specify the

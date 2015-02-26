@@ -68,22 +68,21 @@ function incrementDebugPort(info) {
 }
 
 //shove the --debug at the front of arguments
-function wrapSpawn(/*file , args, options*/) {
-    var argsIndex = 1,
-        file = arguments[0],
+function wrapSpawnFork(method /*, file , args, options*/) {
+    var argsIndex = 2,
+        file = arguments[1],
         args, options, debugPort, child,
         argsPortBrk;
     if (typeof file !== 'string') {
         file = process.execPath;
-        argsIndex = 0;
+        argsIndex = 1;
     }
     if (Array.isArray(arguments[argsIndex])) {
         args = arguments[argsIndex];
         options = arguments[argsIndex + 1];
     } else {
-        //only passed in options
         args = [];
-        options = arguments[0];
+        options = arguments[argsIndex];
     }
     argsPortBrk = _getDebugPort(args);
     debugPort = incrementDebugPort({args: args});
@@ -98,7 +97,7 @@ function wrapSpawn(/*file , args, options*/) {
         }
     }
     //in case they add more params in the future, concat new args on
-    child = child_process.spawn.apply(child_process, [file, args, options].concat(Array.prototype.slice.call(arguments, 3)));
+    child = child_process[method].apply(child_process, [file, args, options].concat(Array.prototype.slice.call(arguments, 4)));
     if (child instanceof EventEmitter) {
         child.debugPort = debugPort || argsPortBrk[0];
     }
@@ -117,7 +116,15 @@ exports.debugBreak = function(argv) {
     }
     return _getDebugPort(argv)[2];
 };
-exports.spawn = wrapSpawn;
+exports.spawn = function(file, args, options) {
+    return wrapSpawnFork('spawn', file, args, options);
+};
+exports.fork = function(modulePath, args, options) {
+    if (Array.isArray(modulePath)) {
+        throw new TypeError('Missing modulePath for fork');
+    }
+    return wrapSpawnFork('fork', modulePath, args, options);
+};
 exports.nextPort = incrementDebugPort;
 
 /*
