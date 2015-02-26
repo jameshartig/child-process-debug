@@ -89,6 +89,25 @@ exports.testSpawnArgsCommon = function(test) {
     test.done();
 };
 
+exports.testSpawnArgsTwoBrks = function(test) {
+    var file = 'test.js',
+        args = ['--debug-brk', '--debug-brk'],
+        child;
+
+    toggleDebugFlag(false);
+    toggleDebugFlag(true, undefined, true, true);
+    child = hackSpawn(function() {
+        test.strictEqual(arguments[0], file);
+        test.equal(arguments[1][0], '--debug=5859');
+        test.equal(arguments[1][1], '--debug-brk');
+        test.equal(arguments[1][2], '--debug-brk');
+        test.equal(arguments[1].length, 3);
+        return new EventEmitter();
+    }).spawn(file, args);
+    test.equal(child.debugPort, 5859);
+    test.done();
+};
+
 exports.testSpawnArgsNoFile = function(test) {
     var file = process.execPath,
         args = [0, 1],

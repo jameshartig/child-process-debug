@@ -25,7 +25,7 @@ function _getDebugPort(argv) {
         if (typeof argv[i] !== 'string') {
             continue;
         }
-        if (!debugBreak && argv[i] === '--debug-brk') {
+        if (argv[i] === '--debug-brk') {
             debugBreak = true;
             continue;
         }
