@@ -1,14 +1,14 @@
 {
   "name": "child-process-debug",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Convenience methods for debugging child-process",
   "main": "debug.js",
   "directories": {
     "test": "tests"
   },
   "devDependencies": {
-    "nodeunit": "0.9.0",
-    "require-reload": "0.2.2"
+    "nodeunit": "~0.9.0",
+    "require-reload": "~0.2.2"
   },
   "scripts": {
     "test": "nodeunit tests"
