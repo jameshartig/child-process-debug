@@ -119,6 +119,14 @@ exports.debugBreak = function(argv) {
 exports.spawn = function(file, args, options) {
     return wrapSpawnFork('spawn', file, args, options);
 };
+exports.exitWithParent = function(child) {
+    if (typeof child.kill !== 'function') {
+        throw new TypeError('Invalid child sent to exitWithParent');
+    }
+    process.on('exit', child.kill.bind(child));
+    process.on('SIGTERM', child.kill.bind(child));
+    process.on('SIGINT', child.kill.bind(child));
+};
 exports.fork = function(modulePath, args, options) {
     if (Array.isArray(modulePath)) {
         throw new TypeError('Missing modulePath for fork');

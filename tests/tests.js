@@ -370,3 +370,22 @@ exports.testActualForkDebugging = function(test) {
     //now we can trigger the child to die
     child.stdin.write("hey\n");
 };
+
+exports.testExitWithParent = function(test) {
+    test.expect(2);
+    reload.emptyCache(); //clear out any hacked spawns
+    //without silent: true, the output will go out our stderr
+    var child = childProcessDebug.fork('./tests/lib/spawn.js', {silent: true});
+    process.removeAllListeners('SIGINT').once('SIGINT', function() {
+        test.ok(true);
+    });
+    childProcessDebug.exitWithParent(child);
+    child.on('exit', function() {
+        process.removeAllListeners('SIGTERM');
+        test.ok(true);
+        test.done();
+    });
+    process.nextTick(function() {
+        process.emit('SIGINT');
+    });
+};

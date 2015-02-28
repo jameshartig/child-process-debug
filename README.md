@@ -34,6 +34,9 @@ Returns the next debug port that comes after the current process's debug port. I
 debug turned on then this will return undefined. This is useful if you're not using `spawn` and want to specify the
 `--debug=port` argument yourself.
 
+### exitWithParent(child) ###
+Kill's the spawned child when the parent dies. This will not work if the parent is killed with SIGKILL.
+
 ### port() ###
 Returns the current process's debug port or undefined if debug is not turned on.
 
