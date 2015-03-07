@@ -1,6 +1,6 @@
 {
   "name": "child-process-debug",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Convenience methods for debugging child-process",
   "main": "debug.js",
   "directories": {
@@ -13,7 +13,7 @@
   "scripts": {
     "test": "nodeunit tests"
   },
-  "engines": {"node": ">=0.10.36"},
+  "engines": {"node": ">=0.10.33"},
   "engineStrict": true,
   "repository": {
     "type": "git",
