@@ -89,7 +89,7 @@ function wrapSpawnFork(method /*, file , args, options*/) {
     if (debugPort) {
         //only add --debug=port when they didn't already add one
         if (!argsPortBrk[0]) {
-            args.unshift('--debug=' + debugPort);
+            args.push('--debug=' + debugPort);
             argsPortBrk[1] = 0;
         }
         if (!argsPortBrk[2] && myDebugBreak) {

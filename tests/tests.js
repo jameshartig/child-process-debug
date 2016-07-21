@@ -67,7 +67,7 @@ exports.testSpawnArgsCommon = function(test) {
     child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
-        test.equal(arguments[1][0], '--debug=5859');
+        test.equal(arguments[1][arguments[1].length - 1], '--debug=5859');
         test.equal(arguments[1].length, 3);
         test.strictEqual(arguments[2], options);
         return new EventEmitter();
@@ -79,8 +79,8 @@ exports.testSpawnArgsCommon = function(test) {
     child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
-        test.equal(arguments[1][0], '--debug=5859');
-        test.equal(arguments[1][1], '--debug-brk');
+        test.equal(arguments[1][arguments[1].length - 2], '--debug=5859');
+        test.equal(arguments[1][arguments[1].length - 1], '--debug-brk');
         test.equal(arguments[1].length, 4);
         test.strictEqual(arguments[2], options);
         return new EventEmitter();
@@ -98,9 +98,9 @@ exports.testSpawnArgsTwoBrks = function(test) {
     toggleDebugFlag(true, undefined, true, true);
     child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
-        test.equal(arguments[1][0], '--debug=5859');
+        test.equal(arguments[1][0], '--debug-brk');
         test.equal(arguments[1][1], '--debug-brk');
-        test.equal(arguments[1][2], '--debug-brk');
+        test.equal(arguments[1][2], '--debug=5859');
         test.equal(arguments[1].length, 3);
         return new EventEmitter();
     }).spawn(file, args);
@@ -128,7 +128,7 @@ exports.testSpawnArgsNoFile = function(test) {
     child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.strictEqual(arguments[1], args);
-        test.equal(arguments[1][0], '--debug=5859');
+        test.equal(arguments[1][arguments[1].length - 1], '--debug=5859');
         test.equal(arguments[1].length, 3);
         test.strictEqual(arguments[2], options);
         return new EventEmitter();
@@ -208,7 +208,7 @@ exports.testSpawnArgsOnlyArgs = function(test) {
     child = hackSpawn(function() {
         test.strictEqual(arguments[0], file);
         test.ok(Array.isArray(arguments[1]));
-        test.equal(arguments[1][0], '--debug=5859');
+        test.equal(arguments[1][arguments[1].length - 1], '--debug=5859');
         test.equal(arguments[1].length, 3);
         return new EventEmitter();
     }).spawn(args);
