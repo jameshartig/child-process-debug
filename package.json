@@ -1,6 +1,6 @@
 {
   "name": "child_process_inspect",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Convenience methods for debugging child-process",
   "main": "debug.js",
   "directories": {

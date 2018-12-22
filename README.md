@@ -2,7 +2,7 @@
 
 Convenience methods for debugging child processes in Node.JS. Child processes will be started with `--inspect` if the
 parent was started with `--inspect` and the children will each get their own increasing port number based off the 
-parent's port number. The default port is 5858. If you add `--debug-brk` that will also get passed to the children.
+parent's port number. The default port is 5858. If you add `--inspect-brk` that will also get passed to the children.
 
 ## Example ##
 ```JS
