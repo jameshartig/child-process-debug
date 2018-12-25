@@ -25,13 +25,18 @@ function _getDebugPort(argv) {
         if (typeof argv[i] !== 'string') {
             continue;
         }
-        if (argv[i] === '--debug-brk') {
+        if (argv[i] === '--inspect-brk') {
             debugBreak = true;
             continue;
         }
-        if (debugIndex === -1 && argv[i].indexOf('--debug') !== -1) {
-            port = parseInt(argv[i].substr(8), 10);
-            if (!port) {
+        if (debugIndex === -1){
+            if(argv[i].indexOf('--inspect') !== -1) {
+                port = parseInt(argv[i].substr(10), 10);
+                if (!port) {
+                    port = 5858;
+                }
+            }
+            else{
                 port = 5858;
             }
             debugIndex = i;
@@ -59,7 +64,7 @@ function incrementDebugPort(info) {
         nextPort;
     if (portAndIndex[0]) {
         nextPort = portAndIndex[0] + 1;
-        process.execArgv.splice(portAndIndex[1], 1, '--debug=' + nextPort);
+        process.execArgv.splice(portAndIndex[1], 1, '--inspect=' + nextPort);
         if (info !== undefined) {
             setChildInfo(nextPort, info);
         }
@@ -67,7 +72,7 @@ function incrementDebugPort(info) {
     return nextPort;
 }
 
-//shove the --debug at the front of arguments
+//shove the --inspect at the front of arguments
 function wrapSpawnFork(method /*, file , args, options*/) {
     var argsIndex = 2,
         file = arguments[1],
@@ -87,13 +92,13 @@ function wrapSpawnFork(method /*, file , args, options*/) {
     argsPortBrk = _getDebugPort(args);
     debugPort = incrementDebugPort({args: args});
     if (debugPort) {
-        //only add --debug=port when they didn't already add one
+        //only add --inspect=port when they didn't already add one
         if (!argsPortBrk[0]) {
-            args.unshift('--debug=' + debugPort);
+            args.unshift('--inspect=' + debugPort);
             argsPortBrk[1] = 0;
         }
         if (!argsPortBrk[2] && myDebugBreak) {
-            args.splice(argsPortBrk[1] + 1, 0, '--debug-brk');
+            args.splice(argsPortBrk[1] + 1, 0, '--inspect-brk');
         }
     }
     //in case they add more params in the future, concat new args on

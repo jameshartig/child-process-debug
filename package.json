@@ -1,6 +1,6 @@
 {
-  "name": "child-process-debug",
-  "version": "0.0.7",
+  "name": "child_process_inspect",
+  "version": "0.0.9",
   "description": "Convenience methods for debugging child-process",
   "main": "debug.js",
   "directories": {
@@ -15,16 +15,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/fastest963/child-process-debug.git"
+    "url": "git://github.com/ccckblaze/child_process_inspect"
   },
   "keywords": [
     "child_process",
     "child",
     "process",
     "debug",
-    "debugger"
+    "debugger",
+    "inspect",
+    "inspect-brk"
   ],
-  "author": "James Hartig <fastest963@gmail.com>",
+  "author": "ccckblaze <ccckblaze@sina.com>",
   "license": "MIT",
   "readmeFilename": "README.md"
 }
