@@ -23,8 +23,8 @@
     "process",
     "debug",
     "debugger",
-	"inspect",
-	"inspect-brk"
+    "inspect",
+    "inspect-brk"
   ],
   "author": "ccckblaze <ccckblaze@sina.com>",
   "license": "MIT",
